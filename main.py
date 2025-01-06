@@ -147,7 +147,7 @@ OpenPointNum_Astarvi = []
 TimeCostList_Astarvi = []
 
 
-Ratio = [i*1.5 for i in range(1, 3)]
+Ratio = [i*1.5 for i in range(1, 11)]
 RatioPlotList = []  # i*1.5 for i in range(1, 6)]
 OpenPointNumRatio = []
 CostRatio = []

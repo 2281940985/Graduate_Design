@@ -5,8 +5,8 @@ def minimize_frequency_switches_with_frequencies(map, path):
     DP分配最小切换次数的接入频段
     '''
     N = len(path)
-    if N == 100:
-        print(N)
+    # if N == 100:
+    #     print(N)
     INF = float('inf')
     PhaseNum = 10
     # 初始化DP表
