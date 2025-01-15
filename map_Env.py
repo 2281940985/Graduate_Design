@@ -27,6 +27,22 @@ class RandomMap:
         PreObNum = 26
         self.GenerateObstacle(start_point_list, end_point_list, Bs_Power, LoadBaseOb, PowerChange, PreObNum)
 
+        self.CoverageAriea = self.genrateCoverageAriea(end_point_list, 1)
+
+    def genrateCoverageAriea(self, end_point_list, mod):
+        CoverageAriea = []
+        for point in end_point_list:
+            y_min = point.y - mod
+            y_max = point.y + mod
+            x_min = point.x - mod
+            x_max = point.x + mod
+            for x in range(x_min, x_max+1):
+                for y in range(y_min, y_max+1):
+                    CoverageAriea.append([x,y])
+        return CoverageAriea
+
+
+
     #初始化网格区域所有点，每个点传入用户序列 UserSeq 和功率 Power。初始化每个点的cost，time，与band
     def Reset_pointInfo(self, UserSeq, Power):
         for x in range(self.size):
@@ -311,6 +327,15 @@ class RandomMap:
             self.Phase_obstacle8_point = np.load('Phase_obstacle8_point.npy', allow_pickle=True)  # 加载确定地图，频段拥塞8
             self.Phase_obstacle9_point = np.load('Phase_obstacle8_point.npy', allow_pickle=True)  # 加载确定地图，频段拥塞9
 
+            self.Phase1 = np.load("Phase1.npy", allow_pickle=True)
+            self.Phase2 = np.load("Phase2.npy", allow_pickle=True)
+            self.Phase3 = np.load("Phase3.npy", allow_pickle=True)
+            self.Phase4 = np.load("Phase4.npy", allow_pickle=True)
+            self.Phase5 = np.load("Phase5.npy", allow_pickle=True)
+            self.Phase6 = np.load("Phase6.npy", allow_pickle=True)
+            self.Phase7 = np.load("Phase7.npy", allow_pickle=True)
+            self.Phase8 = np.load("Phase8.npy", allow_pickle=True)
+            self.Phase9 = np.load("Phase9.npy", allow_pickle=True)
         if PowerChange:
             for x in range(self.size):
                 for y in range(self.size):
@@ -589,6 +614,11 @@ class RandomMap:
                 return True
         return False
 
+    def IsCoverageAriea(self, i, j, coverageAriea):#coverageAriea是二维数组
+        for p in coverageAriea:
+            if i == p[0] and j == p[1]:
+                return True
+        return False
     def IsPhaseOb(self, i, j):
         for p in self.Phase_obstacle:
             if i == p[0] and j == p[1]:

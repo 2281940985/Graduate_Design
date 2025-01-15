@@ -125,7 +125,7 @@ class Dij:
                 past = past.parent
 
         path_coordinate.append([x, y])
-        MinChangeNum, _, min_index_list = Draw_Path.minimize_frequency_switches_with_frequencies(map, path_coordinate)
+        MinChangeNum, _, min_index_list = Draw_Path.minimize_frequency_switches_with_frequencis(map, path_coordinate)
         return float('%.4f' % (MinChangeNum * ratio + len(path_coordinate) - 1)), min_index_list
 
 

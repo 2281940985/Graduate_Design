@@ -148,7 +148,7 @@ TimeCostList_Astarvi = []
 
 
 Ratio = [i*1.5 for i in range(1, 11)]
-RatioPlotList = []  # i*1.5 for i in range(1, 6)]
+RatioPlotList = [i*1.5 for i in range(1, 11)]  # i*1.5 for i in range(1, 6)]
 OpenPointNumRatio = []
 CostRatio = []
 PathInfo = []
@@ -224,7 +224,9 @@ while runtime < RunTime:
                     continue
                 else:
                     PathViable = True
-                BandChange, BandUseDij, _ = Draw_Path.minimize_frequency_switches_with_frequencies(map, Dij_Path)
+                    #保存Dij_path
+                    np.save(rf"./Path/Dij_path_{ratio}.npy", Dij_Path)
+                BandChange, BandUseDij, _ = Draw_Path.minimize_frequency_switches_with_frequencis(map, Dij_Path)
                 TimeCost_Dij = time.time() - t_Dij
 
                 CheckCostDij = CheckPath.CheckPathCost(Dij_Path, BandChange, ratio)
@@ -233,7 +235,8 @@ while runtime < RunTime:
                 PathCost_Dij.append(CheckCostDij)
                 BandChange_Dij.append(BandChange)
                 OpenPointNum_Dij.append(Dij_dp.OpenPointNum)
-                ax_Dij, _ = Draw_Path.Astar_DrawPath(map, Dij_Path, BandUseDij, ax_Dij, 0)
+                ax_Dij, _, x_Dij_dp_path, y_Dij_dp_path = Draw_Path.Astar_DrawPath(map, Dij_Path, BandUseDij, ax_Dij, 0)
+                Draw_Path.DrawPhasePathMap(x_Dij_dp_path, y_Dij_dp_path, BandUseDij, f"Dij_Dp_{ratio}")#画频谱轨迹图
                 print("OpenPointNum_Dij:", Dij_dp.OpenPointNum)
                 print("Dij_Path:", Dij_Path)
                 print("Dij_Cost:", Dij_Cost)
@@ -245,7 +248,7 @@ while runtime < RunTime:
                 Astar_dp = Dij_Dp.Dij(BaseMap, ratio, UserSeq, Bs_Power_Total * powerratio, TypeAstar_Dp)
                 t_Astar = time.time()
                 Astar_Path, Astar_Cost, Astar_PathPoint, ax_Astar = Astar_dp.RunAndSaveImage(start_point, end_point, ax_Astar)
-                BandChangeAstar, BandUseAstar, _ = Draw_Path.minimize_frequency_switches_with_frequencies(BaseMap, Astar_Path)
+                BandChangeAstar, BandUseAstar, _ = Draw_Path.minimize_frequency_switches_with_frequencis(BaseMap, Astar_Path)
                 TimeCost_Astar = time.time() - t_Astar
 
                 CheckCostAstar = CheckPath.CheckPathCost(Astar_Path, BandChangeAstar, ratio)
@@ -254,7 +257,8 @@ while runtime < RunTime:
                 PathCost_Astar.append(CheckCostAstar)
                 BandChange_Astar.append(BandChangeAstar)
                 OpenPointNum_Astar.append(Astar_dp.OpenPointNum)
-                ax_Astar, _ = Draw_Path.Astar_DrawPath(BaseMap, Astar_Path, BandUseAstar, ax_Astar, 0)
+                ax_Astar, _, x_Astar_dp_path, y_Astar_dp_path = Draw_Path.Astar_DrawPath(BaseMap, Astar_Path, BandUseAstar, ax_Astar, 0)
+                Draw_Path.DrawPhasePathMap(x_Astar_dp_path, y_Astar_dp_path, BandUseAstar, f"Astar_Dp_{ratio}")
                 print("OpenPointNum_Astar:", Astar_dp.OpenPointNum)
                 print("Astar_Path:", Astar_Path)
                 print("Astar_Cost:", Astar_Cost)
@@ -280,7 +284,8 @@ while runtime < RunTime:
                 PathCost_Dijvi.append(CheckCostDijvi)
 
 
-                ax_Dij_Viterbi, BandUseDij_Vi = Draw_Path.Astar_DrawPath(map, Dij_VierbiPath, BandUseDij_Viterbi, ax_Dij_Viterbi, 1)
+                ax_Dij_Viterbi, BandUseDij_Vi, x_Dij_Viterbi_path, y_Dij_Viterbi_path = Draw_Path.Astar_DrawPath(map, Dij_VierbiPath, BandUseDij_Viterbi, ax_Dij_Viterbi, 1)
+                Draw_Path.DrawPhasePathMap(x_Dij_Viterbi_path, y_Dij_Viterbi_path, BandUseDij_Vi, f"Dij_Viterbi_{ratio}")
                 # PathInfo[UserSeq] = Dijvi_pathinfo
                 print("OpenPointNum_Dijvi:", Dij_Viterbi.OpenPointNum)
                 print("Dij_ViterbiPath:", Dij_VierbiPath)
@@ -305,7 +310,8 @@ while runtime < RunTime:
                 PathCost_Astarvi.append(CheckCostAstarvi)
 
 
-                ax_Astar_Viterbi, BandUseAstar_Vi = Draw_Path.Astar_DrawPath(BaseMap, Astar_VierbiPath, BandUseAstar_Viterbi, ax_Astar_Viterbi, 1)
+                ax_Astar_Viterbi, BandUseAstar_Vi, x_Astar_Viterbi_path, y_Astar_Viterbi_path = Draw_Path.Astar_DrawPath(BaseMap, Astar_VierbiPath, BandUseAstar_Viterbi, ax_Astar_Viterbi, 1)
+                Draw_Path.DrawPhasePathMap(x_Astar_Viterbi_path, y_Astar_Viterbi_path, BandUseAstar_Vi,f"Astar_Viterbi_{ratio}")
                 # PathInfo[UserSeq] = Dijvi_pathinfo
                 print("OpenPointNum_Astarvi:", Astar_Viterbi.OpenPointNum)
                 print("Astar_ViterbiPath:", Astar_VierbiPath)
@@ -319,7 +325,7 @@ while runtime < RunTime:
                 ori = Astar.astar(BaseMap, ratio, UserSeq, Bs_Power_Total * powerratio)
                 t_ori = time.time()
                 ori_Path, ori_Cost, ori_PathPoint, ax_ori = ori.RunAndSaveImage(start_point, end_point, ax_ori)
-                BandChangeori, BandUseori, _ = Draw_Path.minimize_frequency_switches_with_frequencies(BaseMap, ori_Path)
+                BandChangeori, BandUseori, _ = Draw_Path.minimize_frequency_switches_with_frequencis(BaseMap, ori_Path)
                 TimeCost_ori = time.time() - t_ori
 
                 CheckCostori = CheckPath.CheckPathCost(ori_Path, BandChangeori, ratio)
@@ -328,7 +334,8 @@ while runtime < RunTime:
                 PathCost_ori.append(CheckCostori)
                 BandChange_ori.append(BandChangeori)
                 OpenPointNum_ori.append(ori.OpenPointNum)
-                ax_ori, _ = Draw_Path.Astar_DrawPath(BaseMap, ori_Path, BandUseori, ax_ori, 0)
+                ax_ori, _, x_ori_path, y_ori_path = Draw_Path.Astar_DrawPath(BaseMap, ori_Path, BandUseori, ax_ori, 0)
+                Draw_Path.DrawPhasePathMap(x_ori_path, y_ori_path, BandUseori,f"ori_{ratio}")
                 print("ori_OpenPointNum:", ori.OpenPointNum)
                 print("ori_Path:", ori_Path)
                 print("ori_Cost:", ori_Cost)

@@ -91,8 +91,14 @@ def plot_heatmap(file_path,i):
     cbar = plt.colorbar(heatmap)
     cbar.set_label('SINR Strength',fontsize=20)
 
-    # 添加网格线
-    plt.grid(True, color='white', linestyle='--', linewidth=0.5)
+    # 添加更明显的网格线
+    plt.grid(True, color='white', linestyle='--', linewidth=1.2)
+    
+    # 在每个网格单元之间添加白色虚线
+    for x in range(70):
+        plt.axvline(x=x, color='white', linestyle='--', linewidth=0.5, alpha=0.7)
+    for y in range(70):
+        plt.axhline(y=y, color='white', linestyle='--', linewidth=0.5, alpha=0.7)
     
     # 设置标题和标签
     pic_name = 'Phase'
@@ -103,9 +109,8 @@ def plot_heatmap(file_path,i):
     # 设置刻度
     plt.xticks(np.arange(0, 71, 5))
     plt.yticks(np.arange(0, 71, 5))
-    plt.savefig(rf"E:\Graduate_Design\ZuHao_Code\test_SingleUser\热力图\{pic_name}{i+1}.png", dpi=1080)
+    plt.savefig(rf"E:\Graduate_Design\ZuHao_Code\test_SingleUser\频谱地图\{pic_name}{i+1}.png", dpi=1080)
 
-    
     # 显示图形
     plt.tight_layout()
     plt.show()
@@ -117,7 +122,7 @@ if __name__ == "__main__":
     data_npy = np.load('map_obstacle_coordinate.npy')
     print(data_npy.shape)
     plot_grid_with_coordinates(data_npy)
-    file_path = r'E:\Graduate_Design\ZuHao_Code\test_SingleUser\热力图'
+    file_path = r'E:\Graduate_Design\ZuHao_Code\test_SingleUser\频谱地图'
     for i in range(9):
         plot_heatmap(f"{file_path}\\Phase{i+1}.npy",i)
     # plot_grid_with_coordinates(data_npy)

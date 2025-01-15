@@ -1,6 +1,10 @@
+from collections import OrderedDict
+import os
+import numpy as np
+from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
-
-def minimize_frequency_switches_with_frequencies(map, path):
+import gc
+def minimize_frequency_switches_with_frequencis(map, path):
     '''
     DP分配最小切换次数的接入频段
     '''
@@ -43,8 +47,8 @@ def minimize_frequency_switches_with_frequencies(map, path):
     frequency_assignment = [last_point_frequency[0]]
     min_index = min_index_list[0]
     for i in range(N - 2, -1, -1):
-        if N == 100:
-            print(N)#assigned_frequencies[i + 1][min_index] 表示在第 i+1 个点时，选择频段 min_index 对应的上一个点的频段。
+        # if N == 100:
+        #     print(N)#assigned_frequencies[i + 1][min_index] 表示在第 i+1 个点时，选择频段 min_index 对应的上一个点的频段。
         min_index = assigned_frequencies[i + 1][min_index]
         frequency_assignment.append(map.Phase_use_list[path[i][0]][path[i][1]][min_index])
 
@@ -53,7 +57,7 @@ def minimize_frequency_switches_with_frequencies(map, path):
     for p in path:
         pathPhase.append(map.Phase_use_list[p[0]][p[1]])
 
-    PhaseList = []#记录频段在何时发生切换，
+    PhaseList = []#记录频段在何时发生切换,PhaseList[i][0]代表所用什么频段，PhaseList[i][1]代表在path中发生频段切换的序列
     for p in range(len(frequency_assignment)):
         if p > 1 and frequency_assignment[p] != frequency_assignment[p - 1]:
             PhaseList.append([frequency_assignment[p - 1], p])
@@ -112,18 +116,39 @@ def BandChangeNum(BandChange):
     return ChangeNum
 
 
+from matplotlib.patches import Rectangle
+
 def DrawAxBase(map, ax):
-    for i in range(map.size):  # 根据障碍物生成地图
-        for j in range(map.size):# 遍历地图的每个单元格
-            rec_pa = Rectangle((i - 0.5, j - 0.5), 1, 1, edgecolor='gray', facecolor='w')#矩形边框是灰色,填充是白色
-            ax.add_patch(rec_pa)# 每个单元格的坐标从-0.5开始，这样矩形的中心正好落在整数坐标上。
-            if map.IsObstacle(i, j, map.obstacle_point):# 如果该单元格是障碍物，则绘制一个灰色矩形
+    for i in range(map.size):  # 遍历地图的每个单元格
+        for j in range(map.size):
+            rec_pa = Rectangle((i - 0.5, j - 0.5), 1, 1, edgecolor='gray', facecolor='w')  # 灰色边框，白色填充
+            ax.add_patch(rec_pa)  # 绘制普通单元格
+            if map.IsObstacle(i, j, map.obstacle_point):  # 障碍物：灰色
                 rec_ob = Rectangle((i - 0.5, j - 0.5), 1, 1, facecolor='gray', label='障碍物')
                 ax.add_patch(rec_ob)
-            if map.IsObstacle(i, j, map.Phase_obstacle):# 如果该单元格是全频段拥塞，则绘制一个黑色矩形
+            if map.IsObstacle(i, j, map.Phase_obstacle):  # 全频段拥塞：黑色
                 rec_ob = Rectangle((i - 0.5, j - 0.5), 1, 1, facecolor='black', label='全频段拥塞')
                 ax.add_patch(rec_ob)
+
+    # 定义 3x3 网格的中心和范围
+    x_center, y_center = 65, 65
+    x_min, x_max = x_center - 1, x_center + 1
+    y_min, y_max = y_center - 1, y_center + 1
+
+    # 绘制红色虚线边框
+    coverage_box = Rectangle(
+        (x_min - 0.5, y_min - 0.5),  # 左下角坐标
+        x_max - x_min + 1,  # 宽度
+        y_max - y_min + 1,  # 高度
+        edgecolor='r', facecolor='none', linestyle='dashed', linewidth=1, label='覆盖区域'
+    )
+    ax.add_patch(coverage_box)  # 将红色虚线边框添加到图中
+
+    # 添加图例
+    ax.legend(loc='upper right')
+
     return ax
+
 
 
 def Astar_DrawPath(map, path, band, ax, Mod):
@@ -163,23 +188,30 @@ def Astar_DrawPath(map, path, band, ax, Mod):
     # print(Index)
     x_path = [[] for i in range(Index)]
     y_path = [[] for i in range(Index)]
+    phasePath = [[] for i in range(Index)]
     II = 0
     for i in range(len(path)):
         if i <= Phase_list_User_use[II][1]:
             x_path[II].append(path[i][0])
             y_path[II].append(path[i][1])
+            phasePath[II].append([path[i][0], path[i][1]])
+
         else:
             x_path[II].append(path[i][0])
             y_path[II].append(path[i][1])
+            phasePath[II].append([path[i][0], path[i][1]])
+
             if II != Index - 1:
                 II += 1
             x_path[II].append(path[i][0])
             y_path[II].append(path[i][1])
+            phasePath[II].append([path[i][0], path[i][1]])
+
     # print('x=', x_path)
     # print('y=', y_path)
 
 
-
+    # DrawPhasePathMap(x_path, y_path, band, map)
     for i in range(Index):
         temp_list = Phase_list_User_use[i][0]
         if temp_list == 0:
@@ -203,6 +235,82 @@ def Astar_DrawPath(map, path, band, ax, Mod):
         else:
             ax.plot(x_path[i], y_path[i], linewidth=1.5, color='brown', label='频段9')
 
+    return ax, Phase_list_User_use, x_path, y_path
 
-    return ax, Phase_list_User_use
 
+def DrawPhasePathMap(x_path, y_path, band, name):
+    plt.rcParams['font.family'] = 'SimHei'  # 设置中文字体
+
+    for i in range(len(band)):
+        try:
+            data = np.load(f"Phase{band[i][0]}.npy", allow_pickle=True)
+        except Exception as e:
+            print(f"Draw_path_249line_加载文件失败: {e}")
+            return
+
+        # 处理NaN和无穷大值
+        data = np.nan_to_num(data, nan=0, posinf=np.max(data[np.isfinite(data)]),
+                             neginf=np.min(data[np.isfinite(data)]))
+
+        # 创建图形，调整尺寸
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot(111)
+
+        # 转置数据
+        data = data.T
+        heatmap = ax.imshow(data, cmap='jet', interpolation='nearest', origin='lower',
+                            extent=[0, data.shape[1], 0, data.shape[0]],
+                            vmin=np.min(data), vmax=np.max(data))#jet -> inferno/hot
+
+        # 添加颜色条
+        cbar = plt.colorbar(heatmap, ax=ax, fraction=0.046, pad=0.04)
+        cbar.set_label('SINR Strength', fontsize=14)
+
+        ax.set_xlim(-13, 83)  #
+        ax.set_ylim(-3, 73)  #
+        # 设置坐标轴
+        # ax.set_xlabel('X axis (0-69)', fontsize=12)
+        # ax.set_ylabel('Y axis (0-69)', fontsize=12)
+        ax.set_xticks(np.arange(0.5, data.shape[1] + 1, 10))
+        ax.set_yticks(np.arange(0.5, data.shape[0] + 1, 10))
+        ax.set_xticklabels(np.arange(0, data.shape[1]+1, 10))  # 标签为离散值
+        ax.set_yticklabels(np.arange(0, data.shape[0] + 1, 10))  # 标签为离散值
+
+        # 添加网格线
+        # ax.grid(True, color='white', linestyle='--', linewidth=0.5)
+        ax.grid(False)
+
+        # 调整路径坐标
+        x_centered = [x + 0.5 for x in x_path[i]]
+        y_centered = [y + 0.5 for y in y_path[i]]
+
+        # 绘制路径
+        ax.plot(x_centered, y_centered, color='black', linewidth=1.5, label='轨迹')
+
+        # 标记起点和终点
+        ax.scatter(x_centered[0], y_centered[0], color='purple', s=20, marker='s', label='起点')
+        ax.scatter(x_centered[-1], y_centered[-1], color='red', s=20, marker='s', label='终点')
+
+        # 将图例放在图像内的左上角空白区域
+        ax.legend(loc='upper left', bbox_to_anchor=(0, 1),
+                 fontsize=8, frameon=True, borderpad=0.5,
+                 labelspacing=0.5, handlelength=2.0)
+
+        # 强制刷新画布，防止图例溢出
+        fig.canvas.draw()
+
+        # 添加标题
+        plt.title(f"Phase {band[i][0]}_{i} Map with Path", fontsize=14, pad=20)
+
+        # 创建存储路径
+        save_path = rf"E:\Graduate_Design\ZuHao_Code\test_SingleUser\热力图\{name}"
+        os.makedirs(save_path, exist_ok=True)
+
+        # 保存图片
+        plt.savefig(os.path.join(save_path, f"{name}_{i}.png"), dpi=800, bbox_inches='tight')
+
+        # 显示并释放资源
+        plt.show()
+        plt.close(fig)
+        del data
+        gc.collect()
